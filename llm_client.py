@@ -34,11 +34,22 @@ def _get_client():
                 "The 'openai' package is not installed. Run: pip install -r requirements.txt"
             ) from exc
 
+        # Try to get API key from environment or Streamlit secrets
         api_key = os.environ.get("LLM_API_KEY")
+
+        # If not in env, try Streamlit secrets (for cloud deployment)
+        if not api_key:
+            try:
+                import streamlit as st
+                api_key = st.secrets.get("LLM_API_KEY")
+            except:
+                pass
+
         if not api_key:
             raise RuntimeError(
-                'LLM_API_KEY is not set. Run: export LLM_API_KEY="your-key-here"'
-                '   (Windows: set LLM_API_KEY=your-key-here)'
+                'LLM_API_KEY is not set.\n'
+                'Local: export LLM_API_KEY="your-key-here" (or add to .env)\n'
+                'Streamlit Cloud: Add LLM_API_KEY to secrets in dashboard'
             )
 
         _client = OpenAI(base_url=BASE_URL, api_key=api_key)
