@@ -1,0 +1,13 @@
+Introduction to Data Structures and Algorithms
+
+Arrays are one of the most fundamental data structures in computer science. An array is a collection of elements stored in contiguous memory locations, allowing constant-time access to any element using its index. Arrays are efficient for reading and updating elements, but inserting or deleting elements (especially in the middle) can be expensive because it requires shifting other elements.
+
+Linked Lists provide an alternative to arrays where elements (nodes) are connected through pointers rather than stored contiguously. Each node contains data and a reference to the next node in the sequence. This structure makes insertion and deletion operations more efficient than arrays, but accessing a specific element requires traversing the list from the beginning, resulting in linear time complexity.
+
+Stacks are abstract data types that follow the Last-In-First-Out (LIFO) principle. Elements can only be added or removed from the top of the stack, making them useful for function call management, undo mechanisms, and parsing expressions. Common operations include push (add to top), pop (remove from top), and peek (view top element without removing).
+
+Queues follow the First-In-First-Out (FIFO) principle, similar to waiting in line. Elements are added at the rear and removed from the front. Queues are essential for breadth-first search algorithms, job scheduling, and managing resources in operating systems. Priority queues extend this concept by allowing elements with higher priority to be processed before others regardless of their arrival time.
+
+Binary Search Trees (BST) are hierarchical data structures where each node has at most two children. In a BST, all values in the left subtree are smaller than the node's value, and all values in the right subtree are larger. This property enables efficient searching, insertion, and deletion operations with average time complexity of O(log n), though worst-case scenarios can degrade to O(n) if the tree becomes unbalanced.
+
+Hash Tables use a hash function to map keys to indices in an array, providing average constant-time complexity for insertion, deletion, and lookup operations. Collisions occur when two keys hash to the same index, which can be resolved through techniques like chaining (using linked lists at each index) or open addressing (finding alternative locations). Hash tables are widely used in databases, caches, and implementing associative arrays.

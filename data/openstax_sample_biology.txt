@@ -1,0 +1,33 @@
+Chapter 3: Cell Structure and Function
+
+Introduction to Cell Structure
+
+All living organisms are made up of cells, which are the basic units of life. Cells were first discovered by Robert Hooke in 1665 when he observed cork tissue under a microscope. The cell theory, developed in the 19th century by Matthias Schleiden and Theodor Schwann, states that all living things are composed of one or more cells, the cell is the basic unit of life, and new cells arise from existing cells.
+
+Prokaryotic Cells
+
+Prokaryotic cells are generally smaller and simpler than eukaryotic cells. They lack a membrane-bound nucleus and other membrane-bound organelles. The genetic material in prokaryotic cells is located in a region called the nucleoid, which is not separated from the rest of the cell by a membrane. Bacteria and archaea are examples of prokaryotic organisms. Despite their simplicity, prokaryotic cells are highly successful and can be found in virtually every environment on Earth.
+
+Eukaryotic Cells
+
+Eukaryotic cells are more complex than prokaryotic cells and contain membrane-bound organelles, including a nucleus that houses the cell's genetic material. The nucleus is surrounded by a double membrane called the nuclear envelope, which contains pores that regulate the passage of materials between the nucleus and the cytoplasm. Eukaryotic cells are found in animals, plants, fungi, and protists.
+
+The Cell Membrane
+
+The cell membrane, also called the plasma membrane, forms the outer boundary of the cell and separates the internal environment from the external environment. It is composed of a phospholipid bilayer with embedded proteins. The membrane is selectively permeable, meaning it allows some substances to pass through while blocking others. This selective permeability is crucial for maintaining homeostasis within the cell.
+
+Organelles
+
+Eukaryotic cells contain various organelles, each with specific functions. Mitochondria are often called the "powerhouses" of the cell because they generate ATP through cellular respiration. The endoplasmic reticulum (ER) is a network of membranes involved in protein and lipid synthesis. Ribosomes, which can be free-floating or attached to the ER, are the sites of protein synthesis. The Golgi apparatus modifies, sorts, and packages proteins for transport to their final destinations.
+
+Chloroplasts and Photosynthesis
+
+Plant cells and some protists contain chloroplasts, organelles that carry out photosynthesis. During photosynthesis, chloroplasts capture light energy and convert it into chemical energy stored in glucose molecules. This process not only provides energy for the plant but also produces oxygen as a byproduct, which is essential for most life on Earth. Chloroplasts contain chlorophyll, a green pigment that absorbs light energy.
+
+The Cytoskeleton
+
+The cytoskeleton is a network of protein filaments that extends throughout the cytoplasm. It provides structural support for the cell, helps maintain cell shape, and facilitates cell movement. The cytoskeleton is composed of three types of filaments: microfilaments, intermediate filaments, and microtubules. These structures are dynamic and can be rapidly assembled and disassembled as needed by the cell.
+
+Cell Communication
+
+Cells must be able to communicate with each other to coordinate their activities. Cell signaling involves the transmission of molecular signals from one cell to another. This process typically involves three stages: reception (when a signal molecule binds to a receptor protein), transduction (when the binding triggers a series of molecular changes), and response (when the cell carries out a specific activity). Understanding cell communication is crucial for understanding how organisms function and how diseases develop.
