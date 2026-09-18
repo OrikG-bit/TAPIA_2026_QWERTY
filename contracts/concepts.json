@@ -1,0 +1,6 @@
+{
+  "concepts": [
+    {"id": "c1", "name": "Sample Concept One", "summary": "Fake summary for testing.", "source_text": "This is fake source text for concept one."},
+    {"id": "c2", "name": "Sample Concept Two", "summary": "Fake summary for testing.", "source_text": "This is fake source text for concept two."}
+  ]
+}
