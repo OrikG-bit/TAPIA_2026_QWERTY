@@ -1,36 +1,66 @@
-"""Shared Claude API wrapper for the pipeline.
+﻿"""Shared LLM call wrapper -- everyone imports from here.
 
-STUB: created by Pair B because this file did not exist yet. Whoever owns the
-shared LLM layer should review/replace it -- the rest of the pipeline only
-depends on `call_llm(prompt) -> str`, so keep that signature stable.
+Calls OpenRouter through its OpenAI-compatible API, so we use the `openai`
+package regardless of which model slug MODEL points at. Reads the API key from
+LLM_API_KEY, the variable name the README setup steps tell everyone to export.
+
+Contract for the rest of the pipeline: `call_llm(prompt) -> str`. Keep that
+signature stable; swap the endpoint or model underneath it as needed.
 """
 
-MODEL = "claude-opus-5"
+import os
+
+from dotenv import load_dotenv
+
+# Load .env into the environment before anything reads os.environ.
+load_dotenv()
+
+BASE_URL = "https://openrouter.ai/api/v1"
+# Slug verified against https://openrouter.ai/api/v1/models.
+MODEL = "anthropic/claude-sonnet-5"
 MAX_TOKENS = 16000
 
 _client = None
 
 
 def _get_client():
-    """Lazily build and reuse one Anthropic client (credentials come from the environment)."""
+    """Lazily build and reuse one OpenRouter client, keyed off LLM_API_KEY."""
     global _client
     if _client is None:
         try:
-            import anthropic
+            from openai import OpenAI
         except ImportError as exc:
             raise RuntimeError(
-                "The 'anthropic' package is not installed. Run: pip install anthropic"
+                "The 'openai' package is not installed. Run: pip install -r requirements.txt"
             ) from exc
-        # Reads ANTHROPIC_API_KEY (or an `ant auth login` profile). Never hardcode a key.
-        _client = anthropic.Anthropic()
+
+        api_key = os.environ.get("LLM_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                'LLM_API_KEY is not set. Run: export LLM_API_KEY="your-key-here"'
+                '   (Windows: set LLM_API_KEY=your-key-here)'
+            )
+
+        _client = OpenAI(base_url=BASE_URL, api_key=api_key)
     return _client
 
 
 def call_llm(prompt: str) -> str:
-    """Send a single prompt to Claude and return the response text."""
-    response = _get_client().messages.create(
+    """Send a single prompt to the LLM and return the response text."""
+    response = _get_client().chat.completions.create(
         model=MODEL,
         max_tokens=MAX_TOKENS,
         messages=[{"role": "user", "content": prompt}],
     )
-    return "".join(block.text for block in response.content if block.type == "text")
+    content = response.choices[0].message.content
+    if not content:
+        raise RuntimeError(
+            f"{MODEL} returned an empty response "
+            f"(finish_reason={response.choices[0].finish_reason!r})"
+        )
+    return content
+
+
+if __name__ == "__main__":
+    # Connection smoke test -- README tells everyone to run `python llm_client.py`.
+    print(call_llm("Reply with exactly: LLM connection OK"))

@@ -8,7 +8,7 @@ import json
 
 from llm_client import call_llm
 
-SUPPORTED_MODES = ("standard",)
+SUPPORTED_MODES = ("standard", "dyslexia")
 
 # Shared across every mode's prompt so the JSON contract is stated once.
 _SCHEMA_BLOCK = """Return ONLY a single JSON object, no prose and no markdown fences, shaped exactly like this:
@@ -72,9 +72,37 @@ STANDARD MODE FORMATTING
 {_SCHEMA_BLOCK.replace("<MODE>", "standard")}"""
 
 
-# mode -> prompt builder. Add "adhd" / "dyslexia" builders here as they land.
+def build_dyslexia_prompt(concepts_json: dict) -> str:
+    """Build the LLM prompt for dyslexia mode: short sentences, bullets, bold key terms."""
+    return f"""You are a study-materials generator. Build a concept map, a review sheet and a
+quiz from the concepts below, formatted for a dyslexic reader.
+
+CONCEPTS
+{_format_concepts(concepts_json)}
+
+DYSLEXIA MODE FORMATTING
+- review_sheet: one entry per concept, written as a markdown bullet list.
+  Put a newline between bullets. Every bullet starts with "- ".
+  Give each concept 4 to 7 bullets.
+- One idea per bullet. One sentence per bullet. Maximum 15 words per sentence.
+- Bold every key term with double asterisks, like **this**. Bold at least one
+  term per bullet, and always bold the concept's own name on first use.
+- Use plain everyday words. No semicolons, no subordinate clauses, no jargon
+  left unexplained. Prefer the active voice.
+- quiz: one question per concept, in the same order as the concepts above.
+  Keep each question under 15 words and each option under 10 words.
+  Bold the key term the question is about.
+- concept_map: link concepts where the source material actually supports a
+  relationship; use an empty "edges" list if none do.
+
+{_SCHEMA_BLOCK.replace("<MODE>", "dyslexia")}"""
+
+
+# mode -> prompt builder. Add the "adhd" builder here once the concept_id
+# collision with memory.get_missed_concepts is resolved.
 _PROMPT_BUILDERS = {
     "standard": build_standard_prompt,
+    "dyslexia": build_dyslexia_prompt,
 }
 
 
