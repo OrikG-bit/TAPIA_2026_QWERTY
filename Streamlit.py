@@ -480,7 +480,11 @@ if st.session_state.stage == "workspace":
 
             # Get chapter text from uploaded file or text input
             if chapter_file:
-                chapter_text = chapter_file.read().decode("utf-8")
+                raw = chapter_file.read()
+                try:
+                    chapter_text = raw.decode("utf-8")
+                except UnicodeDecodeError:
+                    chapter_text = raw.decode("utf-8", errors="replace")
             elif chapter_text_input:
                 chapter_text = chapter_text_input
             else:
