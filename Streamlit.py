@@ -250,19 +250,25 @@ def apply_theme(mode):
             font-weight: 600;
             border: 1px solid #CBD2D9;
             background: white;
-            color: #17212B;
+            color: #17212B !important;
             transition: 0.15s ease;
         }}
 
         .stButton > button:hover {{
             border-color: #355D78;
-            color: #24465B;
+            background: #F4F6F8;
+            color: #17212B !important;
         }}
 
         .stButton > button[kind="primary"] {{
-            background: #214D68;
-            color: white;
+            background: #214D68 !important;
+            color: white !important;
             border: none;
+        }}
+
+        .stButton > button[kind="primary"]:hover {{
+            background: #355D78 !important;
+            color: white !important;
         }}
 
 
