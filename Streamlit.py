@@ -2,6 +2,11 @@ import json
 from pathlib import Path
 import streamlit as st
 
+# Import our agents
+from reader_agent import extract_topics
+from generator_agent import generate_materials
+import memory
+
 
 # =========================================================
 # APP CONFIGURATION
@@ -15,6 +20,9 @@ st.set_page_config(
 
 CONTRACTS_DIR = Path("contracts")
 DATA_DIR = Path("data")
+
+# Default student ID for demo
+STUDENT_ID = "demo_student"
 
 
 # =========================================================
@@ -447,6 +455,13 @@ if st.session_state.stage == "workspace":
             key="chapter"
         )
 
+    # Option to paste text directly
+    chapter_text_input = st.text_area(
+        "Or paste chapter text directly:",
+        height=150,
+        placeholder="Paste your chapter or reading text here..."
+    )
+
     generate = st.button(
         "Generate Study Materials",
         type="primary",
@@ -454,11 +469,51 @@ if st.session_state.stage == "workspace":
     )
 
     if generate:
-        # During frontend development we use contract data.
-        st.session_state.materials = load_materials()
-        st.success(
-            "Study materials loaded from the development contract."
-        )
+        try:
+            chapter_text = None
+
+            # Get chapter text from uploaded file or text input
+            if chapter_file:
+                chapter_text = chapter_file.read().decode("utf-8")
+            elif chapter_text_input:
+                chapter_text = chapter_text_input
+            else:
+                st.error("Please upload a chapter file or paste chapter text.")
+                st.stop()
+
+            # Show progress
+            with st.spinner("Extracting concepts from chapter..."):
+                # Step 1: Extract concepts using reader agent
+                concepts = extract_topics(chapter_text)
+                st.session_state.concepts = concepts
+
+            st.success(f"✓ Extracted {len(concepts['concepts'])} concepts")
+
+            # Get learning mode
+            learning_mode_map = {
+                "Standard": "standard",
+                "ADHD": "standard",  # Will format differently in display
+                "Dyslexia": "dyslexia"
+            }
+            mode = learning_mode_map.get(st.session_state.get("learning_mode", "Standard"), "standard")
+
+            with st.spinner(f"Generating study materials in {mode} mode..."):
+                # Step 2: Generate materials using generator agent
+                materials = generate_materials(concepts, mode)
+                st.session_state.materials = materials
+
+            st.success("✓ Study materials generated successfully!")
+
+            # Save concepts and materials to data directory
+            DATA_DIR.mkdir(exist_ok=True)
+            with open(DATA_DIR / "concepts.json", "w") as f:
+                json.dump(concepts, f, indent=2)
+            with open(DATA_DIR / "materials.json", "w") as f:
+                json.dump(materials, f, indent=2)
+
+        except Exception as e:
+            st.error(f"Error generating materials: {str(e)}")
+            st.exception(e)
 
     st.divider()
 
@@ -780,9 +835,44 @@ if st.session_state.stage == "workspace":
                 st.session_state.submitted_answers = submitted_answers
                 st.session_state.quiz_submitted = True
 
-                st.success(
-                    "Quiz submitted. Memory grading will be connected during integration."
-                )
+                try:
+                    # Grade the quiz using memory system
+                    quiz_data = materials.get("quiz", [])
+                    graded = memory.grade_quiz(quiz_data, submitted_answers)
+
+                    # Save results to persistent memory
+                    memory.save_results(STUDENT_ID, graded)
+
+                    # Display results
+                    score = graded["score"]
+                    total = graded["total"]
+                    percentage = (score / total * 100) if total > 0 else 0
+
+                    if score == total:
+                        st.balloons()
+                        st.success(f"🎉 Perfect score! {score}/{total} ({percentage:.0f}%)")
+                    elif score >= total * 0.7:
+                        st.success(f"✓ Good job! {score}/{total} ({percentage:.0f}%)")
+                    else:
+                        st.warning(f"Keep studying! {score}/{total} ({percentage:.0f}%)")
+
+                    # Show which concepts to review
+                    missed_count = total - score
+                    if missed_count > 0:
+                        st.info(f"💡 Review {missed_count} concept(s). Go to 'Missed Topics' to practice them again.")
+
+                    # Show detailed results
+                    with st.expander("View detailed results"):
+                        for result in graded["results"]:
+                            status = "✓" if result["is_correct"] else "✗"
+                            st.write(f"{status} Question {result['quiz_id']}: {result['submitted']} (correct: {result['correct_answer']})")
+
+                    # Store in session for display
+                    st.session_state.last_quiz_results = graded
+
+                except Exception as e:
+                    st.error(f"Error grading quiz: {str(e)}")
+                    st.exception(e)
 
 
     # =====================================================
@@ -832,34 +922,98 @@ if st.session_state.stage == "workspace":
 
 elif st.session_state.stage == "missed":
 
-    st.header("Missed Topics")
+    st.header("Missed Topics - Spaced Repetition")
 
     st.write(
         """
-        This workspace is reserved for persistent spaced-repetition
-        review. Once memory integration is complete, only concepts
-        missed in previous sessions will appear here.
+        This workspace shows only the concepts you got wrong in previous quizzes.
+        Focus your review time on what you need to learn!
         """
     )
 
-    memory = load_student_memory()
+    try:
+        # Get missed concepts from persistent memory
+        missed_concept_ids = memory.get_missed_concepts(STUDENT_ID)
 
-    if not memory:
+        if not missed_concept_ids:
+            st.success("🎉 Great job! You haven't missed any concepts yet.")
+            st.info("Complete a quiz in the Study Workspace to track your progress.")
 
-        st.info(
-            "No saved learning history is available yet."
-        )
+        else:
+            st.warning(f"📚 You have {len(missed_concept_ids)} concept(s) to review:")
 
-    else:
+            # Show which concepts were missed
+            if "concepts" in st.session_state.get("concepts", {}):
+                concepts = st.session_state.concepts["concepts"]
+                missed_concepts = [c for c in concepts if c["id"] in missed_concept_ids]
 
-        st.subheader("Saved Learning History")
+                for concept in missed_concepts:
+                    with st.expander(f"📌 {concept['name']}"):
+                        st.write(f"**Summary:** {concept['summary']}")
+                        st.write(f"**Source:** {concept['source_text']}")
 
-        # Development display.
-        # Later this gets replaced with the real re-quiz UI.
-        st.json(memory)
+            st.divider()
+
+            # Generate re-quiz with only missed concepts
+            st.subheader("Practice Quiz - Missed Concepts Only")
+
+            if "materials" in st.session_state and st.session_state.materials:
+                materials = st.session_state.materials
+                requiz = memory.build_requiz(missed_concept_ids, materials)
+
+                if requiz.get("quiz"):
+                    st.info(f"This quiz contains {len(requiz['quiz'])} question(s) covering only the concepts you missed.")
+
+                    submitted_answers = {}
+
+                    for index, question in enumerate(requiz["quiz"]):
+                        question_id = question.get("id", f"q{index + 1}")
+                        question_text = question.get("question", f"Question {index + 1}")
+                        options = question.get("options", [])
+
+                        st.markdown(f"### Question {index + 1}")
+                        st.write(question_text)
+
+                        if options:
+                            submitted_answers[question_id] = st.radio(
+                                "Select one answer",
+                                options,
+                                key=f"requiz_{question_id}",
+                                label_visibility="collapsed"
+                            )
+
+                        st.divider()
+
+                    if st.button("Submit Re-Quiz", type="primary", use_container_width=True):
+                        try:
+                            # Grade the re-quiz
+                            graded = memory.grade_quiz(requiz["quiz"], submitted_answers)
+                            memory.save_results(STUDENT_ID, graded)
+
+                            score = graded["score"]
+                            total = graded["total"]
+                            percentage = (score / total * 100) if total > 0 else 0
+
+                            if score == total:
+                                st.balloons()
+                                st.success(f"🎉 Perfect! You've mastered these concepts! {score}/{total}")
+                            else:
+                                st.warning(f"Score: {score}/{total} ({percentage:.0f}%). Keep practicing!")
+
+                        except Exception as e:
+                            st.error(f"Error grading re-quiz: {str(e)}")
+
+                else:
+                    st.info("Generate study materials first to practice missed concepts.")
+            else:
+                st.info("Generate study materials in the Study Workspace first.")
+
+    except Exception as e:
+        st.error(f"Error loading missed topics: {str(e)}")
+        st.exception(e)
 
     st.divider()
 
     st.caption(
-        "Student memory is persistent and is not stored only in Streamlit session state."
+        "✨ Student memory persists across sessions - quit the app and relaunch to test it!"
     )
